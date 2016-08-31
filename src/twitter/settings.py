@@ -124,3 +124,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+
+##### supervisor related setting s
+
+SUPERVISOR_USER = 'admin'
+SUPERVISOR_PASSWORD = 'admin'
+SUPERVISOR_URI = 'http://'+SUPERVISOR_USER+':'+SUPERVISOR_PASSWORD+'@127.0.0.1:9001'

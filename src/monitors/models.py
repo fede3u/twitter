@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 from django.db import models
 from django.core.exceptions import ValidationError
 import os
+from django.conf import settings
+import xmlrpclib
+
 
 type_list = (
     ('search', 'search'),
@@ -34,7 +37,56 @@ class Monitor(models.Model):
     timestamp = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     def start(self):
-        os.system("python tap/twitter.py %s --consumer-key %s --consumer-secret %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track))
+        # os.system("python tap/twitter.py %s --consumer-key %s --consumer-secret %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track))
+
+        # ###### via supervisor ####
+        s = xmlrpclib.ServerProxy(settings.SUPERVISOR_URI)
+        if not self.exists():
+            try:
+                s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
+                                             {'command': "python tap/twitter.py %s --consumer-key %s --consumer-secret %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track),
+                                              'autostart': 'true',
+                                              'autorestart': 'true',
+                                              'startsecs': '3'})
+            except:
+                return False
+        if not self.is_running():
+            try:
+                s.supervisor.startProcess('tweetset:monitor' + str(self.name))
+            except:
+                return False
+            return True
+        return True
+
+    def stop(self):
+        s = xmlrpclib.ServerProxy(settings.SUPERVISOR_URI)
+        if self.exists():
+            if self.is_running():
+                s.supervisor.stopProcess('tweetset:monitor'+str(self.name))
+            s.twiddler.removeProcessFromGroup('tweetset','monitor'+str(self.name))
+
+    def exists(self):
+        s = xmlrpclib.ServerProxy(settings.SUPERVISOR_URI)
+        try:
+            l = s.supervisor.getAllProcessInfo()
+        except:
+            return False
+        names = [x['name'] for x in l]
+        if 'monitor' + str(self.name) in names:
+            return True
+        else:
+            return False
+
+    def is_running(self):
+        if self.exists():
+            s = xmlrpclib.ServerProxy(settings.SUPERVISOR_URI)
+            p_info = s.supervisor.getProcessInfo('tweetset:monitor' + str(self.name))
+            if p_info['statename'] == 'RUNNING':
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
     def __unicode__(self):
@@ -44,4 +96,4 @@ class Monitor(models.Model):
         ordering = ['-timestamp']
 
 # python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u
-# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV
+# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -q 'happy' -v DEBUG
