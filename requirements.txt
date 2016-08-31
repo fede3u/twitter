@@ -1,0 +1,6 @@
+Django==1.10
+meld3==1.0.2
+psycopg2==2.6.2
+six==1.10.0
+supervisor-twiddler==1.0.0
+supervisor==3.0
