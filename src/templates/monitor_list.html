@@ -1,0 +1,17 @@
+{% extends "core.html" %}}
+{% load static %}
+{% block body_content %}
+
+<div>
+<div class="list-group">
+{% for obj in instance %}
+  <a href="{% url 'monitors:detail' query=obj.query %}" class="list-group-item">{{ obj.query }}</a>
+{% endfor %}
+</div>
+</div>
+
+{% endblock %}
+
+
+{% block body_script %}
+{% endblock %}

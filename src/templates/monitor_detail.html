@@ -1,0 +1,18 @@
+{% extends "core.html" %}}
+{% load static %}
+{% block body_content %}
+
+<div>
+    <h5> there are {{ count }} tweet about {{ query }}</h5>
+<div class="list-group">
+{% for obj in instance %}
+  <a href="#" class="list-group-item">{{ obj.text }}</a>
+{% endfor %}
+</div>
+</div>
+
+{% endblock %}
+
+
+{% block body_script %}
+{% endblock %}

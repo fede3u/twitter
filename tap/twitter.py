@@ -106,6 +106,9 @@ def main():
             parser_stream.print_help()
         sys.exit(1)
 
+
+############################## SEARCH ###########################
+
     if args.subcommand=='search':
         query = args.query
         geocode = args.geocode
@@ -136,22 +139,27 @@ def main():
 
         twitter = Twython(CONSUMER_KEY, access_token=ACCESS_TOKEN)
 
+        #### conncet and set up mongo db ########
         try:
             client = pymongo.MongoClient(MONGODB_URI)
         except:
             logger.fatal("Couldn't connect to MongoDB. Please check your --db argument settings.")
             sys.exit(1)
 
+        # name database
         parsed_dburi = pymongo.uri_parser.parse_uri(MONGODB_URI)
         db = client[parsed_dburi['database']]
 
+        # name collection
         queries = db[args.queries_collection]
         tweets = db[args.tweets_collection]
 
+        # create indexes
         queries.ensure_index([("query",pymongo.ASCENDING),("geocode",pymongo.ASCENDING),("lang",pymongo.ASCENDING)],unique=True)
         tweets.ensure_index("id",direction=pymongo.DESCENDING,unique=True)
         tweets.ensure_index([("coordinates.coordinates",pymongo.GEO2D),])
 
+        # define where to start
         if not clean_since_id:
             current_query = queries.find_one({'query':query,'geocode':geocode,'lang':lang})
         else:
@@ -161,6 +169,7 @@ def main():
         else:
             since_id = None
 
+        # method to perform query
         def perform_query(**kwargs):
             while True:
                 sleep(waittime)
@@ -176,9 +185,11 @@ def main():
                     continue
                 return results
 
+        # method to save tweets
         def save_tweets(statuses,current_since_id):
             for status in statuses:
-                status['created_at']=parse_datetime(status['created_at'])
+                status['created_at'] = parse_datetime(status['created_at'])
+                status['query'] = query
                 try:
                     status['user']['created_at']=parse_datetime(status['user']['created_at'])
                 except:
@@ -197,13 +208,14 @@ def main():
 
         logger.info("Collecting tweets from the search API...")
 
+        # performing retrieve and save
         while True:
             results = perform_query(q=query,geocode=geocode,lang=lang,count=100,since_id=since_id,result_type=result_type)
 
             refresh_url = results['search_metadata'].get('refresh_url')
             p = urlparse.urlparse(refresh_url)
             # we will now compute the new since_id as the maximum of all returned ids
-            #new_since_id = dict(urlparse.parse_qsl(p.query))['since_id']
+            # new_since_id = dict(urlparse.parse_qsl(p.query))['since_id']
             logger.debug("Rate limit for current window: "+str(twitter.get_lastfunction_header(header="x-rate-limit-remaining")))
             if since_id:
                 current_since_id = longtype(since_id)
@@ -223,6 +235,10 @@ def main():
             new_since_id = str(new_since_id)
             queries.update({'query':query,'geocode':geocode,'lang':lang},{"$set":{'since_id':new_since_id}},upsert=True)
             since_id = new_since_id
+
+
+############################## STREAM ###########################
+
 
     if args.subcommand=='stream':
         from twython import TwythonStreamer

@@ -1,0 +1,31 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--### TITLE BLOCK  ###-->
+    <title>
+        {% block head_title %}
+        {% endblock %}
+    </title>
+
+    <!--### STYLESHEET BLOCK ###-->
+    {% include "stylesheet.html" %}
+
+</head>
+<body>
+
+        <!--### CONTENT BLOCK ###-->
+        {% block body_content %}
+        {% endblock %}
+
+        <!--### BASIC SCRIPTS BLOCK ###-->
+        {% include "script.html" %}
+
+        <!--### EXTRA SCRIPTS BLOCK ###-->
+        {% block body_script %}
+        {% endblock %}
+
+</body>
+</html>
