@@ -21,8 +21,9 @@ def list_of_ids(value):
     except:
         raise ValidationError("Please enter a list of numerical IDs")
 
-consumer_key = "EyCCMkG9OncuG8yOSZeWSDJaB"
-consumer_secret = "2LOdk309J9lvwFbkpNHj2MDI8bMYZTT4RiRvXOBNYN3h31kVFp"
+consumer_key = "etXPtVksfGyBbBdTXeaqMBziq"
+# consumer_secret = "2LOdk309J9lvwFbkpNHj2MDI8bMYZTT4RiRvXOBNYN3h31kVFp"
+consumer_secret = "SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u"
 access_token = "3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV"
 access_token_secret = "3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0"
 
@@ -43,11 +44,18 @@ class Monitor(models.Model):
         s = xmlrpclib.ServerProxy(settings.SUPERVISOR_URI)
         if not self.exists():
             try:
-                s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
-                                             {'command': "python tap/twitter.py %s --consumer-key %s --consumer-secret %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track),
-                                              'autostart': 'true',
-                                              'autorestart': 'true',
-                                              'startsecs': '3'})
+                if self.type == 'search':
+                    s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
+                                                 {'command': "python tap/twitter.py %s -ck %s -cs %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track),
+                                                  'autostart': 'true',
+                                                  'autorestart': 'true',
+                                                  'startsecs': '3'})
+                else:
+                    s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
+                                                 {'command': "python tap/twitter.py %s -t %s -ck %s -cs %s -at %s -ats %s -v DEBUG" % (self.type, self.track, consumer_key, consumer_secret, access_token, access_token_secret),
+                                                     'autostart': 'true',
+                                                     'autorestart': 'true',
+                                                     'startsecs': '3'})
             except:
                 return False
         if not self.is_running():
@@ -97,3 +105,5 @@ class Monitor(models.Model):
 
 # python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u
 # python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -q 'happy' -v DEBUG
+
+# python twitter.py stream -t sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0

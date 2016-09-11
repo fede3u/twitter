@@ -15,13 +15,6 @@ def Monitor_list(request):
     template = "monitor_list.html"
     return render(request, template, context)
 
-# def Monitor_detail(request, query):
-#     tweets = db.tweets
-#     count = tweets.find({"query":query}).count()
-#     instance = tweets.find({"query":query}).limit(100)
-#     context = {"instance": instance,"count": count, "query": query}
-#     template = "monitor_detail.html"
-#     return render(request, template, context)
 
 def Monitor_detail(request,query):
     script_hm, div_hm = heatmap(query)
@@ -30,8 +23,7 @@ def Monitor_detail(request,query):
 
     tweets = db.tweets
     count = tweets.find({"query": query}).count()
-    list = tweets.find({"query":query}).limit(100)
-    mugs = list
+    list = tweets.find({'$query':{'query':query},'$orderby':{'$natural':-1}}).limit(100)
     pipeline = [
         {'$match':{'query':query}},
         {'$sample': {'size':1000}},
@@ -47,7 +39,6 @@ def Monitor_detail(request,query):
     print avg['avg_rc']
 
     context = {"list": list,
-               "mugs": mugs,
                "count": count,
                "query": query,
                "script_hm": script_hm,

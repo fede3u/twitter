@@ -272,6 +272,7 @@ def main():
                     data['created_at']=parse_datetime(data['created_at'])
                     try:
                         data['user']['created_at']=parse_datetime(data['user']['created_at'])
+                        data['query'] = args.track
                     except:
                         pass
                     try:
