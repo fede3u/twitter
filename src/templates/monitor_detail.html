@@ -1,15 +1,47 @@
 {% extends "core.html" %}}
 {% load static %}
+
+
+{% block head_script %}
+
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.2.min.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.0.min.js"></script>
+
+{{script_hm|safe}}
+{{script_lc|safe}}
+{{script_pie|safe }}
+
+
+{% endblock %}
+
+
+
 {% block body_content %}
 
+{{div_hm|safe }}
+{{div_lc|safe }}
+{{div_pie|safe }}
+
+
+
 <div>
-    <h5> there are {{ count }} tweet about {{ query }}</h5>
+    <h5> There are {{ count }} tweet about {{ query }}</h5>
+    <h5> Average Retweet Count: {{avg.avg_rc|floatformat}}</h5>
+    <h5> Average Friends Count: {{avg.avg_frc|floatformat}}</h5>
+    <h5> Average Followers Count: {{avg.avg_foc|floatformat}}</h5>
+    <h5> Average Statuses Count: {{avg.avg_sc|floatformat}}</h5>
+</div>
+
+
 <div class="list-group">
-{% for obj in instance %}
+{% for obj in list %}
   <a href="#" class="list-group-item">{{ obj.text }}</a>
+  <img src="{{ obj.user.profile_image_url }}" alt="" style="width:50px;height:50px;">
 {% endfor %}
 </div>
-</div>
+
+
+
 
 {% endblock %}
 

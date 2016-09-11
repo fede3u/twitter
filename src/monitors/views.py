@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 from .models import Monitor
 from pymongo import MongoClient
+from charts import heatmap, line_chart, pie
 
 client = MongoClient()
 db = client.twitter
@@ -14,113 +15,103 @@ def Monitor_list(request):
     template = "monitor_list.html"
     return render(request, template, context)
 
-def Monitor_detail(request, query):
+# def Monitor_detail(request, query):
+#     tweets = db.tweets
+#     count = tweets.find({"query":query}).count()
+#     instance = tweets.find({"query":query}).limit(100)
+#     context = {"instance": instance,"count": count, "query": query}
+#     template = "monitor_detail.html"
+#     return render(request, template, context)
+
+def Monitor_detail(request,query):
+    script_hm, div_hm = heatmap(query)
+    script_lc, div_lc = line_chart(query)
+    script_pie, div_pie = pie(query)
+
     tweets = db.tweets
-    count = tweets.find({"query":query}).count()
-    instance = tweets.find({"query":query}).limit(100)
-    context = {"instance": instance,"count": count, "query": query}
+    count = tweets.find({"query": query}).count()
+    list = tweets.find({"query":query}).limit(100)
+    mugs = list
+    pipeline = [
+        {'$match':{'query':query}},
+        {'$sample': {'size':1000}},
+        {'$group': { "_id": "null",
+                     'avg_foc':{'$avg':'$user.followers_count'},
+                     'avg_frc':{'$avg':'$user.friends_count'},
+                     'avg_sc' :{'$avg':'$user.statuses_count'},
+                     'avg_rc':{'$avg':'$retweet_count'}
+                     }},
+        {'$project':{'avg_foc':1,'avg_frc':1, 'avg_sc': 1, 'avg_rc': 1 }}]
+    avg_followers = tweets.aggregate(pipeline)
+    avg = avg_followers['result'][0]
+    print avg['avg_rc']
+
+    context = {"list": list,
+               "mugs": mugs,
+               "count": count,
+               "query": query,
+               "script_hm": script_hm,
+               "script_lc": script_lc,
+               "script_pie":script_pie,
+               "div_hm": div_hm,
+               "div_lc": div_lc,
+               "div_pie":div_pie,
+               "avg" : avg}
     template = "monitor_detail.html"
     return render(request, template, context)
 
 
 def simple_chart(request):
+    # pandas and numpy imports
     import pandas as pd
     import numpy as np
     from bson import json_util, ObjectId
     from pandas.io.json import json_normalize
     import json
-
     from pandas import Series, DataFrame
-    from bokeh.plotting import figure
+
+    # bokeh related import
     from bokeh.embed import components
-    from math import pi
-    from bokeh.models import ColumnDataSource, HoverTool, LinearColorMapper
-    from bokeh.sampledata.unemployment1948 import data
 
+
+    ##### data from twitter #####
     tweets = db.tweets
-    dates = tweets.find({"query":"sex"},{'created_at':1})
-
-
+    pipeline = [{'$match':{'query':'sex'}},{'$sample': {'size':1000}}, {'$project':{'user.lang': 1, 'user.time_zone': 1}}]
+    dates = tweets.aggregate(pipeline)
+    dates = dates['result']
     sanitized = json.loads(json_util.dumps(dates))
     normalize = json_normalize(sanitized)
     df = pd.DataFrame(normalize)
 
-    df['created_at.$date'] = pd.to_datetime(df['created_at.$date'], unit='ms')
-    df['second'] = df['created_at.$date'].dt.second
-    df['minute'] = df['created_at.$date'].dt.minute
-    df.drop(df.columns[[0,1]], axis=1, inplace=True)
-    final = DataFrame({'count': df.groupby(["minute", "second"]).size()}).reset_index()
-    d = DataFrame(final.pivot(index='minute', columns='second', values='count').reset_index())
+    # df['created_at.$date'] = pd.to_datetime(df['created_at.$date'], unit='ms')
+    # df['second'] = df['created_at.$date'].dt.second
+    # df['day'] = df['created_at.$date'].dt.dayofweek
+    # df['hour'] = df['created_at.$date'].dt.hour
+    # df['minute'] = df['created_at.$date'].dt.minute
+    # df.drop(df.columns[[0,1]], axis=1, inplace=True)
+    d = DataFrame({'count': df.groupby(["user.lang","user.time_zone"]).size()}).reset_index()
+    d = DataFrame(d.pivot(index='user.lang', columns='user.time_zone', values='count').reset_index())
     d.fillna(0, inplace=True)
+    d = pd.melt(d, id_vars=['user.lang'],
+               value_vars = list(d.columns.values)[1:],
+               value_name ='count', var_name='t_count')
+    d = d[d['count']>1]
+    d['count'] = [int(x) for x in d['count']]
+    d.reset_index(inplace=True)
+    del d['index']
     print d
 
-    # data['Year'] = [str(x) for x in data['Year']]
-    d['minute'] = [str(x) for x in d['minute']]
-    d.columns = [str(x) for x in d.columns]
+
+    ##### new chart  #####
 
 
-    # years = list(data['Year'])
-    years = list(d['minute'])
-
-    # months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    months = d.columns.tolist()[1:]
-
-    # data = data.set_index('Year')
-    data = d.set_index('minute')
 
 
-    # this is the colormap from the original NYTimes plot
-    colors = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
-    mapper = LinearColorMapper(palette=colors)
-    # Set up the data for plotting. We will need to have values for every
-    # pair of year/month names. Map the rate to a color.
-    month = []
-    year = []
-    color = []
-    rate = []
-    for y in years:
-        for m in months:
-            month.append(m)
-            year.append(y)
-            monthly_rate = data[m][y]
-            rate.append(monthly_rate)
-
-    source = ColumnDataSource(
-        data=dict(month=month, year=year, rate=rate)
-    )
-
-    TOOLS = "hover,save,pan,box_zoom,wheel_zoom"
-
-    p = figure(title="Sex world usage on twitter by minute",
-               x_range=years, y_range=list(reversed(months)),
-               x_axis_location="above", plot_width=900, plot_height=400,
-               tools=TOOLS)
-
-    p.grid.grid_line_color = None
-    p.axis.axis_line_color = None
-    p.axis.major_tick_line_color = None
-    p.axis.major_label_text_font_size = "5pt"
-    p.axis.major_label_standoff = 0
-    p.xaxis.major_label_orientation = pi / 3
-
-    p.rect(x="year", y="month", width=1, height=1,
-           source=source,
-           fill_color={'field': 'rate', 'transform': mapper},
-           line_color=None)
-
-    p.select_one(HoverTool).tooltips = [
-        ('second', '@month'),
-        ('minute', '@year'),
-        ('rate', '@rate'),
-    ]
-
-    # show the results
-    # show(p)
-    #
-    # plot = figure()
-    # plot.circle([1,2], [3,4])
+    #### pass over function ####
     script, div = components(p)
+
 
     context = {"the_script": script, "the_div": div}
     template = "simple_chart.html"
     return render(request, template, context)
+
