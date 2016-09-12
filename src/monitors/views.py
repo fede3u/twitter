@@ -4,19 +4,36 @@ from django.contrib.auth.decorators import login_required
 from .models import Monitor
 from pymongo import MongoClient
 from charts import heatmap, line_chart, pie
+from bson.objectid import ObjectId
+
 
 client = MongoClient()
 db = client.twitter
 
 def Monitor_list(request):
+    # pipeline = [{'$match': {}}, {'$group': {'_id': '$query'}},{'$project':{'query':1, 'query_id':1}}]
+    # result = tweets.aggregate(pipeline)
+    # result = result['result']
+    # print result
+    # instance = []
+    # for x in result:
+    #     instance.append(x['_id'])
     querries = db.queries
-    instance = querries.find({})
+    result = querries.find({})
+    instance = []
+    for x in result:
+        instance.append({'id':x['_id'],'query':x['query']})
+    print instance
     context = {"instance": instance}
     template = "monitor_list.html"
     return render(request, template, context)
 
 
-def Monitor_detail(request,query):
+def Monitor_detail(request,id):
+    querries = db.queries
+    result = querries.find({'_id': ObjectId(id)})
+    query = result[0]['query']
+
     script_hm, div_hm = heatmap(query)
     script_lc, div_lc = line_chart(query)
     script_pie, div_pie = pie(query)

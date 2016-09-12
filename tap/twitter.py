@@ -76,6 +76,7 @@ def main():
 
     #mongoDB specific arguments
     parser_stream.add_argument('-d', '--db', type=six.text_type, dest='dburi', default='mongodb://localhost:27017/twitter', help='MongoDB URI, example: mongodb://dbuser:dbpassword@localhost:27017/dbname Defaults to mongodb://localhost:27017/twitter')
+    parser_stream.add_argument('-qc', '--queries-collection','--queries_collection', dest='queries_collection', type=six.text_type, default='queries', help='The name of the collection for storing the highest since_id for each query. Default is queries.')
     parser_stream.add_argument('-tc', '--tweets-collection','--tweets_collection', dest='tweets_collection', type=six.text_type, default='tweets', help='The name of the collection for storing tweets. Default is tweets.')
 
     #stream api specific
@@ -158,6 +159,7 @@ def main():
         queries.ensure_index([("query",pymongo.ASCENDING),("geocode",pymongo.ASCENDING),("lang",pymongo.ASCENDING)],unique=True)
         tweets.ensure_index("id",direction=pymongo.DESCENDING,unique=True)
         tweets.ensure_index([("coordinates.coordinates",pymongo.GEO2D),])
+        tweets.ensure_index([("query",pymongo.ASCENDING)], name="query", default_language='english')
 
         # define where to start
         if not clean_since_id:
@@ -185,12 +187,17 @@ def main():
                     continue
                 return results
 
+
         # method to save tweets
         def save_tweets(statuses,current_since_id):
+            queries.update({'query':query,'geocode':geocode,'lang':lang},{"$set":{'since_id':current_since_id}}, upsert=True)
+            query_id = queries.find({'query':query})[0]['_id']
+            # print query_id
             for status in statuses:
                 status['created_at'] = parse_datetime(status['created_at'])
                 status['query'] = query
                 try:
+                    status['query_id'] = query_id
                     status['user']['created_at']=parse_datetime(status['user']['created_at'])
                 except:
                     pass
@@ -265,14 +272,21 @@ def main():
 
         tweets.ensure_index("id",direction=pymongo.DESCENDING,unique=True)
         tweets.ensure_index([("coordinates.coordinates",pymongo.GEO2D),])
+        tweets.ensure_index([("query",pymongo.ASCENDING)], name="query", default_language='english')
+
 
         class TapStreamer(TwythonStreamer):
+
+            queries = db[args.queries_collection]
+            queries.update({'query':args.track,'geocode':args.locations},{"$set":{'since_id':""}}, upsert=True)
+            query_id = queries.find({'query':args.track})[0]['_id']
             def on_success(self, data):
                 if 'text' in data:
                     data['created_at']=parse_datetime(data['created_at'])
                     try:
                         data['user']['created_at']=parse_datetime(data['user']['created_at'])
                         data['query'] = args.track
+                        data['query_id'] = query_id
                     except:
                         pass
                     try:

@@ -7,6 +7,11 @@ import os
 from django.conf import settings
 import xmlrpclib
 
+from pymongo import MongoClient
+
+client = MongoClient()
+db = client.twitter
+
 
 type_list = (
     ('search', 'search'),
@@ -22,7 +27,6 @@ def list_of_ids(value):
         raise ValidationError("Please enter a list of numerical IDs")
 
 consumer_key = "etXPtVksfGyBbBdTXeaqMBziq"
-# consumer_secret = "2LOdk309J9lvwFbkpNHj2MDI8bMYZTT4RiRvXOBNYN3h31kVFp"
 consumer_secret = "SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u"
 access_token = "3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV"
 access_token_secret = "3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0"
@@ -96,6 +100,19 @@ class Monitor(models.Model):
         else:
             return False
 
+    def delete(self):
+        self.stop()
+        # querries = db.queries
+        # result = querries.find({'query': self.track})
+        # print result
+        # id = result[0]['_id']
+        # print id
+        # db.queries.remove({'_id': ObjectId(id)})
+        # db.tweets.remove({'_id': ObjectId(id)})
+        db.queries.remove({'query': self.track})
+        db.tweets.remove({'query': self.track})
+        super(Monitor, self).delete()
+
 
     def __unicode__(self):
         return unicode(self.name)
@@ -103,7 +120,7 @@ class Monitor(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
-# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u
-# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -q 'happy' -v DEBUG
+# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -v DEBUG
 
 # python twitter.py stream -t sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0
+# python twitter.py stream -t "hot dog" -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -v DEBUG
