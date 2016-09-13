@@ -69,6 +69,7 @@ def main():
     parser_search.add_argument('-d', '--db', type=six.text_type, dest='dburi', default='mongodb://localhost:27017/twitter', help='MongoDB URI, example: mongodb://dbuser:dbpassword@localhost:27017/dbname Defaults to mongodb://localhost:27017/twitter')
     parser_search.add_argument('-qc', '--queries-collection','--queries_collection', dest='queries_collection', type=six.text_type, default='queries', help='The name of the collection for storing the highest since_id for each query. Default is queries.')
     parser_search.add_argument('-tc', '--tweets-collection','--tweets_collection', dest='tweets_collection', type=six.text_type, default='tweets', help='The name of the collection for storing tweets. Default is tweets.')
+    parser_search.add_argument('-id', '--monitor-id','--monitor_id', dest='monitor_id', type=six.text_type, default='null', help='define an id that will be saved in the document to retrive the source monitor source')
 
     parser_search.add_argument('-v', '--verbosity', type=six.text_type, dest='loglevel', default='WARN', choices=["DEBUG","INFO","WARN","ERROR","CRITICAL","FATAL"], help='The level of verbosity.')
 
@@ -91,6 +92,7 @@ def main():
     parser_stream.add_argument('-cs', '--consumer-secret', '--consumer_secret', type=six.text_type, dest='consumer_secret', help="The consumer secret that you obtain when you create an app at https://apps.twitter.com/")
     parser_stream.add_argument('-at', '--access-token', '--access_token', type=six.text_type, dest='access_token', help="You can generate your user access token at http://apps.twitter.com by clicking 'Create my access token'.")
     parser_stream.add_argument('-ats', '--access-token-secret', '--access_token_secret', type=six.text_type, dest='access_token_secret', help="You can generate your user access token secret at http://apps.twitter.com by clicking 'Create my access token'.")
+    parser_stream.add_argument('-id', '--monitor-id','--monitor_id', dest='monitor_id', type=six.text_type, default='null', help='define an id that will be saved in the document to retrive the source monitor source')
 
     parser_stream.add_argument('-v', '--verbosity', type=six.text_type, dest='loglevel', default='WARN', choices=["DEBUG","INFO","WARN","ERROR","CRITICAL","FATAL"], help='The level of verbosity.')
 
@@ -111,7 +113,9 @@ def main():
 ############################## SEARCH ###########################
 
     if args.subcommand=='search':
+
         query = args.query
+        # query = unicode(q,"Utf-8")
         geocode = args.geocode
         lang = args.lang
         loglevel = args.loglevel
@@ -190,12 +194,13 @@ def main():
 
         # method to save tweets
         def save_tweets(statuses,current_since_id):
-            queries.update({'query':query,'geocode':geocode,'lang':lang},{"$set":{'since_id':current_since_id}}, upsert=True)
+            queries.update({'query':query,'geocode':geocode,'lang':lang, 'monitor_id':args.monitor_id},{"$set":{'since_id':current_since_id}}, upsert=True)
             query_id = queries.find({'query':query})[0]['_id']
             # print query_id
             for status in statuses:
                 status['created_at'] = parse_datetime(status['created_at'])
                 status['query'] = query
+                status['monitor_id'] = args.monitor_id
                 try:
                     status['query_id'] = query_id
                     status['user']['created_at']=parse_datetime(status['user']['created_at'])
@@ -240,7 +245,7 @@ def main():
                 new_since_id = save_tweets(results['statuses'],new_since_id)
 
             new_since_id = str(new_since_id)
-            queries.update({'query':query,'geocode':geocode,'lang':lang},{"$set":{'since_id':new_since_id}},upsert=True)
+            queries.update({'query':query,'geocode':geocode,'lang':lang,'monitor_id':args.monitor_id},{"$set":{'since_id':new_since_id}},upsert=True)
             since_id = new_since_id
 
 
@@ -278,14 +283,15 @@ def main():
         class TapStreamer(TwythonStreamer):
 
             queries = db[args.queries_collection]
-            queries.update({'query':args.track,'geocode':args.locations},{"$set":{'since_id':""}}, upsert=True)
+            queries.update({'query':args.track,'geocode':args.locations,'monitor_id':args.monitor_id},{"$set":{'since_id':""}}, upsert=True)
             query_id = queries.find({'query':args.track})[0]['_id']
             def on_success(self, data):
                 if 'text' in data:
                     data['created_at']=parse_datetime(data['created_at'])
+                    data['monitor_id'] = args.monitor_id
+                    data['query'] = args.track
                     try:
                         data['user']['created_at']=parse_datetime(data['user']['created_at'])
-                        data['query'] = args.track
                         data['query_id'] = query_id
                     except:
                         pass

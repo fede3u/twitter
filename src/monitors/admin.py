@@ -20,13 +20,26 @@ def empty_collections(modeladmin, request, queryset):
 empty_collections.short_description = "Remove all tweets from selected monitors"
 
 class MonitorAdmin(admin.ModelAdmin):
-    list_display = ('name','type','follow', 'track', 'is_running', 'exists')
+    list_display = ('name','id','type','follow', 'track', 'is_running', 'exists', 'tweetcount')
 
     def is_running(self, obj):
         return obj.is_running()
 
     def exists(self, obj):
         return obj.exists()
+
+    def tweetcount(self, obj):
+        return obj.count()
+
+    def get_actions(self, request):
+        # Disable delete
+        actions = super(MonitorAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        # Disable delete
+        return False
 
     is_running.boolean = True
     exists.boolean = True

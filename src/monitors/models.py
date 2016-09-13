@@ -36,7 +36,7 @@ class Monitor(models.Model):
     name = models.CharField(max_length=100,help_text="Select a label for your collection of tweets.")
     type = models.CharField(choices=type_list, max_length=20)
     follow = models.TextField(blank=True,null=True,help_text="A comma separated list of user IDs, indicating the users to return statuses for in the stream. More information at https://dev.twitter.com/docs/streaming-apis/parameters#follow",verbose_name="List of User IDs to follow (separated with commas)",validators=[list_of_ids])
-    track = models.TextField(blank=True,null=True,help_text="A comma separated list of keywords or phrases to track. Phrases of keywords are specified by a comma-separated list. More information at https://dev.twitter.com/docs/streaming-apis/parameters#track",verbose_name="List of keywords to track (separated with commas)")
+    track = models.TextField(blank=True,null=True,help_text="A comma separated list of keywords or phrases to track. Phrases of keywords are specified by a comma-separated list. More information at https://dev.twitter.com/docs/streaming-apis/parameters#track and https://dev.twitter.com/rest/public/search",verbose_name="List of keywords to track (separated with commas)")
     locations = models.TextField(blank=True,null=True,help_text="A comma-separated list of longitude,latitude pairs specifying a set of bounding boxes to filter Tweets by. On geolocated Tweets falling within the requested bounding boxes will be included—unlike the Search API, the user\'s location field is not used to filter tweets. Each bounding box should be specified as a pair of longitude and latitude pairs, with the southwest corner of the bounding box coming first. For example: \"-122.75,36.8,-121.75,37.8\" will track all tweets from San Francisco. NOTE: Bounding boxes do not act as filters for other filter parameters. More information at https://dev.twitter.com/docs/streaming-apis/parameters#locations",verbose_name="List of coordinates")
     updated = models.DateTimeField(auto_now=False, auto_now_add=True)
     timestamp = models.DateTimeField(auto_now=True, auto_now_add=False)
@@ -50,13 +50,13 @@ class Monitor(models.Model):
             try:
                 if self.type == 'search':
                     s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
-                                                 {'command': "python tap/twitter.py %s -ck %s -cs %s -q %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track),
+                                                 {'command': "python tap/twitter.py %s -ck %s -cs %s -q %s -id %s -v DEBUG" % (self.type, consumer_key, consumer_secret, self.track, self.id),
                                                   'autostart': 'true',
                                                   'autorestart': 'true',
                                                   'startsecs': '3'})
                 else:
                     s.twiddler.addProgramToGroup('tweetset', 'monitor' + str(self.name),
-                                                 {'command': "python tap/twitter.py %s -t %s -ck %s -cs %s -at %s -ats %s -v DEBUG" % (self.type, self.track, consumer_key, consumer_secret, access_token, access_token_secret),
+                                                 {'command': "python tap/twitter.py %s -t %s -ck %s -cs %s -at %s -ats %s -id %s -v DEBUG" % (self.type, self.track, consumer_key, consumer_secret, access_token, access_token_secret, self.id),
                                                      'autostart': 'true',
                                                      'autorestart': 'true',
                                                      'startsecs': '3'})
@@ -102,16 +102,13 @@ class Monitor(models.Model):
 
     def delete(self):
         self.stop()
-        # querries = db.queries
-        # result = querries.find({'query': self.track})
-        # print result
-        # id = result[0]['_id']
-        # print id
-        # db.queries.remove({'_id': ObjectId(id)})
-        # db.tweets.remove({'_id': ObjectId(id)})
-        db.queries.remove({'query': self.track})
-        db.tweets.remove({'query': self.track})
+        db.queries.remove({'monitor_id': str(self.id)})
+        db.tweets.remove({'monitor_id': str(self.id)})
         super(Monitor, self).delete()
+
+    def count(self):
+        count = db.tweets.find({'monitor_id': str(self.id)}).count()
+        return count
 
 
     def __unicode__(self):
@@ -120,7 +117,7 @@ class Monitor(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
-# python twitter.py search -q sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -v DEBUG
+# python twitter.py search -q %22happy%20hour%22 -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
 
 # python twitter.py stream -t sex -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0
-# python twitter.py stream -t "hot dog" -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -v DEBUG
+# python twitter.py stream -t "hot dog" -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG

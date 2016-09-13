@@ -6,7 +6,7 @@
 <div class="list-group">
 {% for obj in instance %}
   {% if obj != None%}
-    <a href="{% url 'monitors:detail' query=obj.id %}" class="list-group-item">{{ obj.query }}</a>
+    <a href="{% if obj.id != None%}{% url 'monitors:detail' id=obj.id %}{% endif %}" class="list-group-item">{{ obj.query }}</a>
   {% endif %}
 {% endfor %}
 </div>

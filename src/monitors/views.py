@@ -11,13 +11,6 @@ client = MongoClient()
 db = client.twitter
 
 def Monitor_list(request):
-    # pipeline = [{'$match': {}}, {'$group': {'_id': '$query'}},{'$project':{'query':1, 'query_id':1}}]
-    # result = tweets.aggregate(pipeline)
-    # result = result['result']
-    # print result
-    # instance = []
-    # for x in result:
-    #     instance.append(x['_id'])
     querries = db.queries
     result = querries.find({})
     instance = []
