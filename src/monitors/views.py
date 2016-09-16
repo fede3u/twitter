@@ -15,7 +15,7 @@ def Monitor_list(request):
     result = querries.find({})
     instance = []
     for x in result:
-        instance.append({'id':x['_id'],'query':x['query']})
+        instance.append({'id':x['_id'],'query':x['monitor_name']})
     print instance
     context = {"instance": instance}
     template = "monitor_list.html"

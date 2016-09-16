@@ -15,6 +15,7 @@ if six.PY3:
     longtype = six.integer_types[0]
 from datetime import datetime
 from email.utils import parsedate
+import urllib2
 
 def main():
     FORMAT = '[%(asctime)-15s] %(levelname)s: %(message)s'
@@ -70,6 +71,7 @@ def main():
     parser_search.add_argument('-qc', '--queries-collection','--queries_collection', dest='queries_collection', type=six.text_type, default='queries', help='The name of the collection for storing the highest since_id for each query. Default is queries.')
     parser_search.add_argument('-tc', '--tweets-collection','--tweets_collection', dest='tweets_collection', type=six.text_type, default='tweets', help='The name of the collection for storing tweets. Default is tweets.')
     parser_search.add_argument('-id', '--monitor-id','--monitor_id', dest='monitor_id', type=six.text_type, default='null', help='define an id that will be saved in the document to retrive the source monitor source')
+    parser_search.add_argument('-mn', '--monitor-name','--monitor_name', dest='monitor_name', type=six.text_type, default='null', help='define the name of the monitor to retrive name')
 
     parser_search.add_argument('-v', '--verbosity', type=six.text_type, dest='loglevel', default='WARN', choices=["DEBUG","INFO","WARN","ERROR","CRITICAL","FATAL"], help='The level of verbosity.')
 
@@ -93,6 +95,7 @@ def main():
     parser_stream.add_argument('-at', '--access-token', '--access_token', type=six.text_type, dest='access_token', help="You can generate your user access token at http://apps.twitter.com by clicking 'Create my access token'.")
     parser_stream.add_argument('-ats', '--access-token-secret', '--access_token_secret', type=six.text_type, dest='access_token_secret', help="You can generate your user access token secret at http://apps.twitter.com by clicking 'Create my access token'.")
     parser_stream.add_argument('-id', '--monitor-id','--monitor_id', dest='monitor_id', type=six.text_type, default='null', help='define an id that will be saved in the document to retrive the source monitor source')
+    parser_stream.add_argument('-mn', '--monitor-name','--monitor_name', dest='monitor_name', type=six.text_type, default='null', help='define the name of the monitor to retrive name')
 
     parser_stream.add_argument('-v', '--verbosity', type=six.text_type, dest='loglevel', default='WARN', choices=["DEBUG","INFO","WARN","ERROR","CRITICAL","FATAL"], help='The level of verbosity.')
 
@@ -115,7 +118,6 @@ def main():
     if args.subcommand=='search':
 
         query = args.query
-        # query = unicode(q,"Utf-8")
         geocode = args.geocode
         lang = args.lang
         loglevel = args.loglevel
@@ -194,12 +196,13 @@ def main():
 
         # method to save tweets
         def save_tweets(statuses,current_since_id):
-            queries.update({'query':query,'geocode':geocode,'lang':lang, 'monitor_id':args.monitor_id},{"$set":{'since_id':current_since_id}}, upsert=True)
+            queries.update({'query':query,'geocode':geocode,'lang':lang, 'monitor_id':args.monitor_id, 'monitor_name':args.monitor_name},{"$set":{'since_id':current_since_id}}, upsert=True)
             query_id = queries.find({'query':query})[0]['_id']
             # print query_id
             for status in statuses:
                 status['created_at'] = parse_datetime(status['created_at'])
                 status['query'] = query
+                status['monitor_name'] = args.monitor_name
                 status['monitor_id'] = args.monitor_id
                 try:
                     status['query_id'] = query_id
@@ -281,15 +284,15 @@ def main():
 
 
         class TapStreamer(TwythonStreamer):
-
             queries = db[args.queries_collection]
-            queries.update({'query':args.track,'geocode':args.locations,'monitor_id':args.monitor_id},{"$set":{'since_id':""}}, upsert=True)
+            queries.update({'query':args.track,'geocode':args.locations,'monitor_id':args.monitor_id, 'monitor_name':args.monitor_name},{"$set":{'since_id':""}}, upsert=True)
             query_id = queries.find({'query':args.track})[0]['_id']
             def on_success(self, data):
                 if 'text' in data:
                     data['created_at']=parse_datetime(data['created_at'])
-                    data['monitor_id'] = args.monitor_id
                     data['query'] = args.track
+                    data['monitor_id'] = args.monitor_id
+                    data['monitor_name'] = args.monitor_name
                     try:
                         data['user']['created_at']=parse_datetime(data['user']['created_at'])
                         data['query_id'] = query_id

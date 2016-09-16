@@ -1,0 +1,58 @@
+SEARCH
+
+watching now
+python twitter.py search -q 'watching now' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+"watching now"
+python twitter.py search -q '"watching now"' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+love OR hate
+python twitter.py search -q 'love OR hate' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+beer -glass
+python twitter.py search -q 'beer -glass' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+#haiku #poetry
+python twitter.py search -q '#haiku #poetry' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+from:interior
+python twitter.py search -q 'from:interior' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+list:NASA/astronauts-in-space-now
+python twitter.py search -q 'list:NASA/astronauts-in-space-now' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+to:NASA
+python twitter.py search -q 'to:NASA' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+@NASA
+python twitter.py search -q '@NASA' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+politics filter:safe
+python twitter.py search -q 'politics filter:safe' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+puppy filter:media
+python twitter.py search -q 'puppy filter:media' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+puppy filter:native_video
+python twitter.py search -q 'filter:native_video' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+puppy filter:images
+python twitter.py search -q 'puppy filter:images' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+hilarious filter:links
+python twitter.py search -q 'hilarious filter:links' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+superhero since:2016-09-14
+python twitter.py search -q 'superhero since:2016-09-14' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+movie -scary :)
+python twitter.py search -q 'movie -scary :)' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+traffic ?
+python twitter.py search -q 'traffic ?' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+'sex' '-22.912214,-43.230182,10km'   link for converter: http://www.latlong.net/
+python twitter.py search -q 'sex' -g '37.781157,-122.398720,1mi'  -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+'recent' 'Trump'
+python twitter.py search -q 'Trump' -r 'recent'  -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+'Trump' 'it'   link languages: http://www.andiamo.co.uk/resources/iso-language-codes
+python twitter.py search -q 'Trump' -l 'it'  -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -tc prova -id 0 -v DEBUG
+
+
+STREAM
+sex
+python twitter.py stream -t 'sex' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
+twitter api,twitter streaming
+python twitter.py stream -t 'twitter api,twitter streaming' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
+facebook.com
+python twitter.py stream -t 'facebook.com' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
+759251
+python twitter.py stream -f '759251' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
+759251,28785486
+python twitter.py stream -f '759251,28785486' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
+
+'-22.912214,-43.230182,10km'   link for converter: http://www.latlong.net/
+python twitter.py stream  -l '74,40,-73,41' -ck etXPtVksfGyBbBdTXeaqMBziq -cs SCSqatlxVEMDWAStnAgleM5r6XVmvUtuShT7tBZqcMjWK7ae6u -at 3222575935-8e42Mt1dcZcx7QTUvKAWtEB9M0lEclRMZVklznV -ats 3LSWpVIyrR9H5dOTaASfyVUAzjvt1J08n09djBU7Nbmr0 -tc prova -id 0 -v DEBUG
