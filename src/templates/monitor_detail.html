@@ -6,10 +6,28 @@
 
 <script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.2.min.js"></script>
 <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.0.min.js"></script>
+    <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
+    <script type='text/javascript'>
+     google.charts.load('upcoming', {'packages': ['geochart']});
+     google.charts.setOnLoadCallback(drawRegionsMap);
+
+      function drawRegionsMap() {
+      var data = new google.visualization.DataTable({{table|safe}}, 0.6);
+
+      var options = {
+        region: 'US',
+        displayMode: 'markers',
+        resolution: 'provinces',
+        colorAxis: {colors: ['green', 'blue']}
+      };
+
+      var chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    };
+    </script>
 
 {{script_hm|safe}}
 {{script_lc|safe}}
-{{script_pie|safe }}
 
 
 {% endblock %}
@@ -17,34 +35,99 @@
 
 
 {% block body_content %}
-
-{{div_hm|safe }}
-{{div_lc|safe }}
-{{div_pie|safe }}
-
-
-
-<div>
-    <h5> There are {{ count }} tweet about {{ query }}</h5>
-    <h5> Average Retweet Count: {{avg.avg_rc|floatformat}}</h5>
-    <h5> Average Friends Count: {{avg.avg_frc|floatformat}}</h5>
-    <h5> Average Followers Count: {{avg.avg_foc|floatformat}}</h5>
-    <h5> Average Statuses Count: {{avg.avg_sc|floatformat}}</h5>
+<h1> There are {{ count }} people taking about {{ query }}</h1>
+<hr>
+<div class="col-md-12" >
+<div class="row">
+<div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+    <span class="count_top"><i class="fa fa-user"></i> Avg Retweet</span>
+    <div class="count">{{avg.avg_rc|floatformat}}</div>
+    <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+</div>
+<div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+    <span class="count_top"><i class="fa fa-user"></i> Avg Friends</span>
+    <div class="count">{{avg.avg_frc|floatformat}}</div>
+    <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+</div>
+<div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+    <span class="count_top"><i class="fa fa-user"></i> Avg Followers</span>
+    <div class="count">{{avg.avg_foc|floatformat}}</div>
+    <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+</div>
+<div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+    <span class="count_top"><i class="fa fa-user"></i> Avg Statuses</span>
+    <div class="count">{{avg.avg_sc|floatformat}}</div>
+    <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+</div>
+</div>
+<br>
+<div class="row">
+<div class="col-md-6">
+    <h5> {{query}} world usage on twitter by minute</h5>
+    {{div_hm|safe }}
+</div>
+<div class="col-md-6">
+    <h5> {{query}} tweets frequency on the past 60 minutes</h5>
+    {{div_lc|safe }}
+</div>
 </div>
 
-
-<div class="list-group">
-{% for obj in list %}
-  <a href="#" class="list-group-item">{{ obj.text }}</a>
-  <img src="{{ obj.user.profile_image_url }}" alt="" style="width:50px;height:50px;">
-{% endfor %}
+<div class="row">
+    <div class="col-md-6">
+        <h5>where are they located</h5>
+        <div id="chart_div" style="width: 600px; height: 400px"></div>
+    </div>
+    <div class="col-md-4" >
+        <h5>what else are they talking about</h5>
+        <div id="htmltagcloud">
+            {% for tag in tags %}
+            <span class="wrd{{tag.size}}">{{tag.name}}</span>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
-
+<div class="owl-carousel owl-theme col-md-12" >
+    {% for obj in list %}
+    <div class="item" data-merge="5">
+        <div style="position:relative; background-size:cover; height: 175px;z-index:0;">
+            <div style="background-color: black; opacity:0.65; position: absolute; width:100%; height:100%;z-index:-1;"></div>
+            <div class="container text-center img-responsive" style="color:white; padding-top:10px; padding-bottom:10px;">
+                <a href="">
+                    <img class="img-circle" src="{{ obj.user.profile_image_url }}" style="width:80px;height:80px; display:inline">
+                </a>
+                <p class="lead">{{obj.text}}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+</div>
 
 
 {% endblock %}
 
 
 {% block body_script %}
+<!--owl-carousel-->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.1.6/owl.carousel.min.js"></script>
+
+<script>
+$('.owl-carousel').owlCarousel({
+//    stagePadding: 50,
+    items:5,
+    loop:true,
+    merge:true,
+    autoplay:true,
+    autoplayTimeout:5000,
+    responsive:{
+        678:{
+            mergeFit:true
+        },
+        1000:{
+            mergeFit:false
+        }
+    }
+});
+</script>
 {% endblock %}

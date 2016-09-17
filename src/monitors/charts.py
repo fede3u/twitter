@@ -12,6 +12,8 @@ from math import pi
 from bokeh.models import ColumnDataSource, HoverTool, LinearColorMapper
 from bokeh.charts import Line, Donut
 
+from gviz_data_table import Table
+
 
 client = MongoClient()
 db = client.twitter
@@ -77,9 +79,8 @@ def heatmap(query):
 
     TOOLS = "hover,save,pan,box_zoom,wheel_zoom"
 
-    p = figure(title="%s world usage on twitter by minute" % query,
-               x_range=years, y_range=list(reversed(months)),
-               x_axis_location="above", plot_width=900, plot_height=400,
+    p = figure(x_range=years, y_range=list(reversed(months)),
+               x_axis_location="above", plot_width=500, plot_height=400,
                tools=TOOLS)
 
     p.grid.grid_line_color = None
@@ -143,7 +144,11 @@ def line_chart(query):
              color=['numbers'],
              legend_sort_field='color',
              legend_sort_direction='ascending',
-             title="%s tweets trend over time" % query , ylabel='Frequency', xlabel='Timeframe', legend=False)
+             ylabel='Frequency',
+             xlabel='Timeframe',
+             legend=False,
+             plot_width=500,
+             plot_height=400,)
 
     script, div = components(p)
     return script, div
@@ -182,3 +187,76 @@ def pie(query):
 
     script, div = components(p)
     return script, div
+
+def usmap(query):
+    tweets = db.tweets
+    pipeline = [{'$match': {'query': query, 'place.country_code': 'US'}}, {'$project': {'place.full_name': 1}}]
+    dates = tweets.aggregate(pipeline)
+    dates = dates['result']
+    sanitized = json.loads(json_util.dumps(dates))
+    normalize = json_normalize(sanitized)
+    df = pd.DataFrame(normalize)
+
+    df = DataFrame({'count': df.groupby(["place.full_name"]).size()}).reset_index()
+
+    table = Table()
+    table.add_column('place', str, 'place.full_name')
+    table.add_column('count', int, 'count')
+
+    for row in df.iterrows():
+        a = row[1].tolist()
+        a[0] = a[0].encode()
+        table.append(a)
+    table = table.encode()
+    table = json.dumps(table)
+
+    return table
+
+
+def word_cloud(query):
+    tweets = db.tweets
+    pipeline = [
+    {'$match': {'query': query}},
+    {'$unwind': '$entities.hashtags'},
+    {'$group': {
+        '_id' : '$entities.hashtags.text',
+        'tagCount': {'$sum': 1}
+    }},
+    {'$sort': {
+        'tagCount': -1
+    }},
+    {'$limit':50},
+    {'$project': {
+        'name':'$_id',
+        'tagCount':1}}
+    ]
+    tags = tweets.aggregate(pipeline)
+    tags = tags['result']
+
+    sanitized = json.loads(json_util.dumps(tags))
+    normalize = json_normalize(sanitized)
+    df = pd.DataFrame(normalize)
+    dt = pd.cut(df['tagCount'],5,labels=[1,2,3,4,5])
+
+    df['size'] = dt
+    df = df.sort(columns='name')
+    df = df.to_dict('records')
+    return df
+
+def avg_quadrant(query):
+    tweets = db.tweets
+    count = tweets.find({"query": query}).count()
+    list = tweets.find({'$query':{'query':query},'$orderby':{'$natural':-1}}).limit(100)
+    pipeline = [
+        {'$match':{'query':query}},
+        {'$sample': {'size':1000}},
+        {'$group': { "_id": "null",
+                     'avg_foc':{'$avg':'$user.followers_count'},
+                     'avg_frc':{'$avg':'$user.friends_count'},
+                     'avg_sc' :{'$avg':'$user.statuses_count'},
+                     'avg_rc':{'$avg':'$retweet_count'}
+                     }},
+        {'$project':{'avg_foc':1,'avg_frc':1, 'avg_sc': 1, 'avg_rc': 1 }}]
+    avg_followers = tweets.aggregate(pipeline)
+    avg = avg_followers['result'][0]
+    return avg, count, list
